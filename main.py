@@ -33,7 +33,7 @@ def addProperties(label,name):##unfinished
     node=findNode(label,name)
 
 def xlsx2nodes():
-    workbook = load_workbook("D:\Microsoft VS Code\workspace\knowledgeGraph\data.xlsx")
+    workbook = load_workbook(r"E:\1 学习资料\9-大四上\制造工艺设计实践\202221106-knowlegeGraph\data.xlsx")
     #print(workbook.sheetnames)
     nodeSheet = workbook['nodeData']
     #特征节点
@@ -71,9 +71,16 @@ def xlsx2nodes():
         createNode('equipment',name= eName,lowerSize=eLowerSize,upperSize=eUpperSize,lowerIT=eLowerIT,upperIT=eUpperIT,notes=eNotes )
         print("equipmentNode [{}] creat".format(pName))
     print("------created {} equipmentNode------ ".format(max_row_equipment-1))
+    #刀具节点
+    max_row_tool = max((bb.row for bb in nodeSheet['Q'] if bb.value))
+    for i in range(2, max_row_tool+1):
+        tName=nodeSheet['Q{}'.format(i)].value
+        createNode('tool',name= tName)
+        print("tool [{}] creat".format(tName))
+    print("------created {} equipmentNode------ ".format(max_row_tool-1))
 
 def xlsx2relats():
-    workbook = load_workbook("D:\Microsoft VS Code\workspace\knowledgeGraph\data.xlsx")
+    workbook = load_workbook(r"E:\1 学习资料\9-大四上\制造工艺设计实践\202221106-knowlegeGraph\data.xlsx")
     #print(workbook.sheetnames)
     nodeSheet = workbook['relatData']
     #可用工艺
@@ -118,6 +125,15 @@ def xlsx2relats():
         r4=creatRelat(startNode,relatType,endNode)
         print("{} creat".format(r4))
     print("------created {} '可用设备' relation------ ".format(max_row_equip-1)) 
+    #装备设备
+    max_row_tool = max((bb.row for bb in nodeSheet['N'] if bb.value))
+    for i in range(2, max_row_tool+1):
+        relatType=nodeSheet['N{}'.format(i)].value
+        startNode=findNode('equipment',nodeSheet['M{}'.format(i)].value)
+        endNode=findNode('tool',nodeSheet['O{}'.format(i)].value)
+        r5=creatRelat(startNode,relatType,endNode)
+        print("{} creat".format(r5))
+    print("------created {} '装备刀具' relation------ ".format(max_row_tool-1)) 
 
 def nodes2xlsx():
     workbook = load_workbook(r"E:\1 学习资料\9-大四上\制造工艺设计实践\202221106-knowlegeGraph\data.xlsx")
@@ -252,8 +268,6 @@ def buildGraph():
     xlsx2relats()
 
 if __name__ == "__main__":
-    #nodes2xlsx()
-    #relats2xlsx()
-    #buildGraph()
+    buildGraph()
     #searchProcess('孔',7,0.8)
-    searchProcess('平面',6,0.08)
+    #searchProcess('平面',6,0.08)
