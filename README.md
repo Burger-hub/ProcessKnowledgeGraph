@@ -1,7 +1,9 @@
 # ProcessKnowlegeGraph
 project for course
 
-## 安装模块
+## Requirement
+
+- Neo4j Desktop
 
 - Anaconda
 
@@ -18,6 +20,9 @@ project for course
 - openpyxl
 - pyqt5
 
-## 使用方式
+## Usage
 
+- 将待用的step文件放入目录中
 - 在pythonocct环境中运行 feature_extraction.py
+- 点击某一特征作为待加工特征
+- 输出待选加工路径
