@@ -27,20 +27,26 @@ from OCC.Core.GeomAbs import GeomAbs_Plane, GeomAbs_Cylinder
 from OCC.Core.TopoDS import topods_Face
 from OCC.Core.BRepAdaptor import BRepAdaptor_Surface
 from OCC.Display.SimpleGui import init_display
-'''
-from occ.Core.STEPControl import STEPControl_Reader
-from occ.Core.IFSelect import IFSelect_RetDone, IFSelect_ItemsByEntity
-from occ.Core.GeomAbs import GeomAbs_Plane, GeomAbs_Cylinder
-from occ.Core.TopoDS import topods_Face
-from occ.Core.BRepAdaptor import BRepAdaptor_Surface
-from occ.Display.SimpleGui import init_display
-from occ.Extend.TopologyUtils import TopologyExplorer
+from OCC.Core.StepRepr import Handle_StepRepr_RepresentationItem_DownCast
+from OCC.Extend.TopologyUtils import TopologyExplorer
 from pyautogui import hotkey
-'''
+import re
+
+
+step_reader = STEPControl_Reader()
+tr = step_reader.WS().TransferReader()
+radius = 0
+
+
+def parser(face_name):
+    result = re.findall(r'(\w+):(\d+) (\w+):(\S+)', face_name)
+    it = int(result[0][1])
+    ra = round(float(result[0][3]), 3)
+    return it, ra
+
 
 def read_step_file(filename):
     """read the STEP file and returns a compound"""
-    step_reader = STEPControl_Reader()
     status = step_reader.ReadFile(filename)
 
     if status == IFSelect_RetDone:  # check status
@@ -79,16 +85,8 @@ def recognize_face(a_face):
         # first get the related gp_Pln
         gp_pln = surf.Plane()
         location = gp_pln.Location()  # a point of the plane
-        # gp_pln.
         normal = gp_pln.Axis().Direction()  # the plane normal
         # then export location and normal to the console output
-        # print(
-        #     "--> Location (global coordinates)",
-        #     round(location.X(), 2),
-        #     round(location.Y(), 2),
-        #     round(location.Z(), 2),
-        # )
-        # print("--> Normal (global coordinates)", round(normal.X(), 2), round(normal.Y(), 2), round(normal.Z(), 2))
         test_plane = (location.X(), location.Y(), location.Z(), normal.X(), normal.Y(), normal.Z())
         new_plane = {"location": (round(location.X(), 2), round(location.Y(), 2), round(location.Z(), 2)),
                      "normal": (round(normal.X(), 2), round(normal.Y(), 2), round(normal.Z(), 2))}
@@ -101,16 +99,11 @@ def recognize_face(a_face):
         # look for the properties of the cylinder
         # first get the related gp_Cyl
         gp_cyl = surf.Cylinder()
+        global radius
+        radius = round(gp_cyl.Radius(), 2)
         location = gp_cyl.Location()  # a point of the axis
         axis = gp_cyl.Axis().Direction()  # the cylinder axis
         # then export location and normal to the console output
-        # print(
-        #     "--> Location (global coordinates)",
-        #     round(location.X(), 2),
-        #     round(location.Y(), 2),
-        #     round(location.Z(), 2),
-        # )
-        # print("--> Axis (global coordinates)", axis.X(), axis.Y(), axis.Z())
         test_cylinder = (location.X(), location.Y(), location.Z(), axis.X(), axis.Y(), axis.Z())
         new_cylinder = {"location": (round(location.X(), 2), round(location.Y(), 2), round(location.Z(), 2)),
                         "axis": (round(axis.X(), 2), round(axis.Y(), 2), round(axis.Z(), 2))}
@@ -118,6 +111,7 @@ def recognize_face(a_face):
             index_cy += 1
             cylinders.append(test_cylinder)
             features["cylinders"][index_cy] = new_cylinder
+        return surf_type
     else:
         # TODO there are plenty other type that can be checked
         # print(surf_type)
@@ -131,16 +125,24 @@ def recognize_clicked(shp, *kwargs):
     """This is the function called every time
     a face is clicked in the 3d view
     """
-    for shape in shp:  # this should be a TopoDS_Face TODO check it is
+    for shape in shp:  # this should be a TopoDS_Face
         # print("Face selected: ", shape)
-        print('\n' * 20)
+        # print("test1")
+        item = tr.EntityFromShapeResult(shape, 1)
+        item = Handle_StepRepr_RepresentationItem_DownCast(item)
+        name = item.Name().ToCString()
+        # print("test2")
+        # print('\n' * 20)
+        it, ra = parser(name)
+        # print(f"it={it}, ra={ra}")
         res = recognize_face(topods_Face(shape))
+        # print("hi")
         if res == GeomAbs_Plane:
-            print("该特征为平面，加工流程如下：")
-            searchProcess('平面', 6, 0.08)
+            print(f"该特征为平面，精度为IT{it}，表面粗糙度为Ra{ra}，加工流程如下：")
+            searchProcess('平面', it, ra)
         elif res == GeomAbs_Cylinder:
-            print("该特征为孔，加工流程如下：")
-            searchProcess('孔', 6, 0.08)
+            print(f"该特征为孔，半径为{radius}，精度为IT{it}，表面粗糙度为Ra{ra}，加工流程如下：")
+            searchProcess('孔', it, ra)
 
 
 def recognize_batch(event=None):
@@ -171,12 +173,13 @@ def exit(event=None):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(filename='logger.log', level=logging.INFO)
+    #logging.basicConfig(filename='logger.log', level=logging.INFO)
+    logging.getLogger().setLevel(logging.INFO)
     display, start_display, add_menu, add_function_to_menu = init_display()
     display.SetSelectionModeFace()  # switch to Face selection mode
     display.register_select_callback(recognize_clicked)
     # first loads the STEP file and display
-    shp = read_step_file(".\object2.STEP")
+    shp = read_step_file("./object3.STEP")
     display.DisplayShape(shp, update=True)
     add_menu("recognition")
     add_function_to_menu("recognition", recognize_batch)
