@@ -33,7 +33,7 @@ def addProperties(label,name):##unfinished
     node=findNode(label,name)
 
 def xlsx2nodes():
-    workbook = load_workbook(r"E:\1 学习资料\9-大四上\制造工艺设计实践\202221106-knowlegeGraph\data.xlsx")
+    workbook = load_workbook(".\data.xlsx")
     #print(workbook.sheetnames)
     nodeSheet = workbook['nodeData']
     #特征节点
@@ -80,7 +80,7 @@ def xlsx2nodes():
     print("------created {} equipmentNode------ ".format(max_row_tool-1))
 
 def xlsx2relats():
-    workbook = load_workbook(r"E:\1 学习资料\9-大四上\制造工艺设计实践\202221106-knowlegeGraph\data.xlsx")
+    workbook = load_workbook(".\data.xlsx")
     #print(workbook.sheetnames)
     nodeSheet = workbook['relatData']
     #可用工艺
@@ -136,7 +136,7 @@ def xlsx2relats():
     print("------created {} '装备刀具' relation------ ".format(max_row_tool-1)) 
 
 def nodes2xlsx():
-    workbook = load_workbook(r"E:\1 学习资料\9-大四上\制造工艺设计实践\202221106-knowlegeGraph\data.xlsx")
+    workbook = load_workbook(".\data2.xlsx")
     #print(workbook.sheetnames)
     nodeSheet = workbook['nodeData']
     #特征节点
@@ -166,10 +166,10 @@ def nodes2xlsx():
         nodeSheet.cell(row=i,column=13).value=nodes[i-2]["lowerIT"]
         nodeSheet.cell(row=i,column=14).value=nodes[i-2]["upperIT"]
         nodeSheet.cell(row=i,column=15).value=nodes[i-2]["notes"]
-    workbook.save(r"E:\1 学习资料\9-大四上\制造工艺设计实践\202221106-knowlegeGraph\data.xlsx")
+    workbook.save(".\data2.xlsx")
 
 def relats2xlsx():   
-    workbook = load_workbook(r"E:\1 学习资料\9-大四上\制造工艺设计实践\202221106-knowlegeGraph\data.xlsx")
+    workbook = load_workbook(".\data2.xlsx")
     #print(workbook.sheetnames)
     nodeSheet = workbook['relatData']
     #可用工艺
@@ -200,7 +200,7 @@ def relats2xlsx():
         nodeSheet.cell(row=i,column=10).value=relats[i-2].start_node['name']
         nodeSheet.cell(row=i,column=11).value='可用设备'
         nodeSheet.cell(row=i,column=12).value=relats[i-2].end_node['name']
-    workbook.save(r"E:\1 学习资料\9-大四上\制造工艺设计实践\202221106-knowlegeGraph\data.xlsx")
+    workbook.save(".\data2.xlsx")
 
 def printpath(path):
     nodes=path.nodes
@@ -258,10 +258,18 @@ def searchProcess(featureName,IT,Ra):
         sNum=len(s)#该末端工序到特征的路径数量
         #print(sNum)
         for j in range(sNum):
-            pathNum=pathNum+1
-            #print("path{}:{}".format(pathNum,s[j]))
-            print("path{}:".format(pathNum))
-            printpath(s[j])#输出正向加工路线
+            #读取末端节点的前一个节点
+            nodes=s[j].nodes
+            preNode=nodes[1]
+            preIT=preNode['lowerIT']
+            preRa=preNode['lowerRa']
+            if (IT>=preIT)&(Ra>=preRa):#若前一道工序满足加工要求，舍弃该路线
+                continue
+            else:
+                pathNum=pathNum+1
+                #print("path{}:{}".format(pathNum,s[j]))
+                print("path{}:".format(pathNum))
+                printpath(s[j])#输出正向加工路线
 def buildGraph():
     graph.delete_all()
     xlsx2nodes()
@@ -269,5 +277,5 @@ def buildGraph():
 
 if __name__ == "__main__":
     #buildGraph()
-    #searchProcess('孔',7,0.8)
-    searchProcess('平面',6,0.08)
+    searchProcess('孔',7,1.5)
+    #searchProcess('平面',6,0.08)
