@@ -4,11 +4,11 @@ from py2neo import NodeMatcher,RelationshipMatcher
 from openpyxl import load_workbook
 
 # 连接neo4j数据库，输入地址、用户名、密码
-graph = py2neo.Graph('bolt://localhost:7687', auth=('neo4j', '1'))
+# graph = py2neo.Graph('bolt://localhost:7687', auth=('neo4j', '1'))
+# matcher = NodeMatcher(graph)
+# rmatcher = RelationshipMatcher(graph)
 
 
-matcher = NodeMatcher(graph)
-rmatcher = RelationshipMatcher(graph)
 def findNode(label,Name):
     node = matcher.match(label).where(name=Name).first()   #取出符合条件的第一个节点
     #node = list(matcher.match(label).where(age=35)) #取出符合条件的节点列表

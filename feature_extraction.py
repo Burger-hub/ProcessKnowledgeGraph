@@ -29,7 +29,6 @@ from OCC.Core.BRepAdaptor import BRepAdaptor_Surface
 from OCC.Display.SimpleGui import init_display
 from OCC.Core.StepRepr import Handle_StepRepr_RepresentationItem_DownCast
 from OCC.Extend.TopologyUtils import TopologyExplorer
-from pyautogui import hotkey
 import re
 
 
@@ -139,10 +138,10 @@ def recognize_clicked(shp, *kwargs):
         # print("hi")
         if res == GeomAbs_Plane:
             print(f"该特征为平面，精度为IT{it}，表面粗糙度为Ra{ra}，加工流程如下：")
-            searchProcess('平面', it, ra)
+            # searchProcess('平面', it, ra)
         elif res == GeomAbs_Cylinder:
             print(f"该特征为孔，半径为{radius}，精度为IT{it}，表面粗糙度为Ra{ra}，加工流程如下：")
-            searchProcess('孔', it, ra)
+            # searchProcess('孔', it, ra)
 
 
 def recognize_batch(event=None):
@@ -176,7 +175,7 @@ if __name__ == "__main__":
     #logging.basicConfig(filename='logger.log', level=logging.INFO)
     logging.getLogger().setLevel(logging.INFO)
     display, start_display, add_menu, add_function_to_menu = init_display()
-    display.SetSelectionModeFace()  # switch to Face selection mode
+    display.SetSelectionModeShape()  # switch to Face selection mode
     display.register_select_callback(recognize_clicked)
     # first loads the STEP file and display
     shp = read_step_file("./object3.STEP")
