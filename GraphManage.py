@@ -4,9 +4,9 @@ from py2neo import NodeMatcher,RelationshipMatcher
 from openpyxl import load_workbook
 
 # 连接neo4j数据库，输入地址、用户名、密码
-# graph = py2neo.Graph('bolt://localhost:7687', auth=('neo4j', '1'))
-# matcher = NodeMatcher(graph)
-# rmatcher = RelationshipMatcher(graph)
+graph = py2neo.Graph('bolt://localhost:7687', auth=('neo4j', '1'))
+matcher = NodeMatcher(graph)
+rmatcher = RelationshipMatcher(graph)
 
 
 def findNode(label,Name):
@@ -77,7 +77,14 @@ def xlsx2nodes():
         tName=nodeSheet['Q{}'.format(i)].value
         createNode('tool',name= tName)
         print("tool [{}] creat".format(tName))
-    print("------created {} equipmentNode------ ".format(max_row_tool-1))
+    print("------created {} toolNode------ ".format(max_row_tool-1))
+    #夹具节点
+    max_row_fixture = max((bb.row for bb in nodeSheet['S'] if bb.value))
+    for i in range(2, max_row_fixture+1):
+        fName=nodeSheet['S{}'.format(i)].value
+        createNode('fixture',name= fName)
+        print("fixture [{}] creat".format(fName))
+    print("------created {} fixtureNode------ ".format(max_row_fixture-1))
 
 def xlsx2relats():
     workbook = load_workbook(".\data.xlsx")
@@ -125,7 +132,7 @@ def xlsx2relats():
         r4=creatRelat(startNode,relatType,endNode)
         print("{} creat".format(r4))
     print("------created {} '可用设备' relation------ ".format(max_row_equip-1)) 
-    #装备设备
+    #装备刀具
     max_row_tool = max((bb.row for bb in nodeSheet['N'] if bb.value))
     for i in range(2, max_row_tool+1):
         relatType=nodeSheet['N{}'.format(i)].value
@@ -133,7 +140,16 @@ def xlsx2relats():
         endNode=findNode('tool',nodeSheet['O{}'.format(i)].value)
         r5=creatRelat(startNode,relatType,endNode)
         print("{} creat".format(r5))
-    print("------created {} '装备刀具' relation------ ".format(max_row_tool-1)) 
+    print("------created {} '装备刀具' relation------ ".format(max_row_tool-1))
+    #装备夹具
+    max_row_fixture = max((bb.row for bb in nodeSheet['T'] if bb.value))
+    for i in range(2, max_row_fixture+1):
+        relatType=nodeSheet['T{}'.format(i)].value
+        startNode=findNode('equipment',nodeSheet['S{}'.format(i)].value)
+        endNode=findNode('fixture',nodeSheet['U{}'.format(i)].value)
+        r6=creatRelat(startNode,relatType,endNode)
+        print("{} creat".format(r6))
+    print("------created {} '装备夹具' relation------ ".format(max_row_fixture-1))  
 
 def nodes2xlsx():
     workbook = load_workbook(".\data2.xlsx")
