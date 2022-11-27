@@ -292,6 +292,6 @@ def buildGraph():
     xlsx2relats()
 
 if __name__ == "__main__":
-    #buildGraph()
-    searchProcess('孔',7,1.5)
+    buildGraph()
+    #searchProcess('孔',7,1.5)
     #searchProcess('平面',6,0.08)
