@@ -218,22 +218,55 @@ def relats2xlsx():
         nodeSheet.cell(row=i,column=12).value=relats[i-2].end_node['name']
     workbook.save(".\data2.xlsx")
 
-def printpath(path):
+def printpath(path,size,featureName):#传入一条加工路径
     nodes=path.nodes
     relats = path.relationships
-    nodesNum=len(nodes)
+    nodesNum=len(nodes) #包括特征节点
     #relatsNum=len(relats)
     processList=[]
     bestIT=nodes[0]['lowerIT']
     bestRa=nodes[0]['lowerRa']
-    for n in range(nodesNum-1):
+    for n in range(nodesNum-1):#去除特征节点
         processList.append(nodes[n]['name'])
+    #print(path)
+    #print(processList)
+    #print(nodesNum)
     processList.reverse()
-    print("->".join(processList[i] for i in range(nodesNum-1)),end="")
-    print("(最优结果:IT={} Ra={})".format(bestIT,bestRa))
+    for i in range(nodesNum-2):
+        InsturName=chooseInstur(featureName,processList[i],size)
+        print("{}({})".format(processList[i],InsturName),end="")
+        print("->",end="")
+    InsturName=chooseInstur(featureName,processList[nodesNum-2],size)
+    print("{}({})".format(processList[nodesNum-2],InsturName))
+    #print("(最优结果:IT={} Ra={})".format(bestIT,bestRa))
 
-def searchProcess(featureName,IT,Ra):
-    print("---加工特征 [{}] 加工精度要求IT{} 粗糙度要求Ra{}---".format(featureName,IT,Ra))
+def chooseInstur(featureName,processName,size):#返回设备名，若无则返回None
+    pNode=findNode('process',processName)
+    relats=list(rmatcher.match([pNode],r_type='可用设备'))
+    if (processName=='精磨') or (processName=='粗磨'):
+        if featureName=='孔':
+            return '内圆磨床'
+        if featureName=='平面':
+            return '平面磨床'
+        else:
+            print("no instrument for this process")
+    if relats==None:#若无设备，返回None
+        return
+    if len(relats)==1:#若只有一个设备，则直接返回
+        return relats[0].end_node['name']
+    nameList=[]
+    sizeList=[]
+    for r in relats:#若有多个设备，先选择符合尺寸要求的设备
+        if size<=r.end_node['upperSize']:
+            nameList.append(r.end_node['name'])
+            sizeList.append(r.end_node['upperSize']) 
+    #print(nameList)
+    #print(sizeList)
+    nameIndex=sizeList.index(min(sizeList))
+    return nameList[nameIndex]
+
+def searchProcess(featureName,IT,Ra,size=0):
+    print("---加工特征 [{}] 加工精度要求IT{} 粗糙度要求Ra{} 特征大小{}mm---".format(featureName,IT,Ra,size))
     featureNode=findNode('feature',featureName)
     usableRelat=list(rmatcher.match([featureNode],r_type='可用工艺'))
     usableNum=len(usableRelat)
@@ -285,13 +318,15 @@ def searchProcess(featureName,IT,Ra):
                 pathNum=pathNum+1
                 #print("path{}:{}".format(pathNum,s[j]))
                 print("path{}:".format(pathNum))
-                printpath(s[j])#输出正向加工路线
+                printpath(s[j],size,featureName)#输出正向加工路线
 def buildGraph():
     graph.delete_all()
     xlsx2nodes()
     xlsx2relats()
 
 if __name__ == "__main__":
-    buildGraph()
-    #searchProcess('孔',7,1.5)
+    #buildGraph()
+    searchProcess('孔',7,1.5,30)
+    #name=chooseInstur('钻孔',2)
+    #print(name)
     #searchProcess('平面',6,0.08)
